@@ -2,8 +2,8 @@ const expect = require('expect');
 const request = require('supertest');
 const {ObjectID} = require('mongodb');
 
-const { app } = require('./../server');
-const { User } = require('./../models/user');
+const {app} = require('./../server');
+const {User} = require('./../models/user');
 
 const users = [
   {
@@ -36,6 +36,9 @@ beforeEach((done) => {
   }).then(() => done());
 });
 
+/*===========================================
+ POST REQUEST TEST
+ ===========================================*/
 describe('POST /users', () => {
   it('should create a new user', (done) => {
 
@@ -57,13 +60,15 @@ describe('POST /users', () => {
         expect(res.body.firstName).toBe(user.firstName)
       })
       .end((err, res) => {
-         if (err) return done(err);
+        if (err) return done(err);
 
-         User.find({email: user.email}).then(users => {
-           expect(users.length).toBe(1);
-           expect(users[0].email).toBe(user.email);
-           done();
-         }).catch(e => done(e));
+        User.find({email: user.email})
+          .then(users => {
+            expect(users.length).toBe(1);
+            expect(users[0].email).toBe(user.email);
+            done();
+          })
+          .catch(err => done(err));
       });
   });
 
@@ -80,14 +85,19 @@ describe('POST /users', () => {
       .end((err, res) => {
         if (err) return done(err);
 
-        User.find().then(users => {
-          expect(users.length).toBe(2);
-          done();
-        }).catch(err => done(err));
+        User.find()
+          .then(users => {
+            expect(users.length).toBe(2);
+            done();
+          })
+          .catch(err => done(err));
       })
   });
 });
 
+/*===========================================
+ GET REQUEST TEST
+ ===========================================*/
 describe('GET /users', () => {
   it('should fetch all users', (done) => {
     request(app)
@@ -99,6 +109,8 @@ describe('GET /users', () => {
       .end(done)
   });
 });
+
+
 
 describe('GET /users/:id', () => {
   it('should get individual user', (done) => {
@@ -126,5 +138,80 @@ describe('GET /users/:id', () => {
       .expect(404)
       .end(done);
   });
+});
 
+
+/*===========================================
+ DELETE REQUEST TEST
+ ===========================================*/
+describe('DELETE /users/:id', () => {
+  it('should delete a user', (done) => {
+
+    const hexId = users[0]._id.toHexString();
+
+    request(app)
+      .delete(`/users/${hexId}`)
+      .expect(200)
+      .expect(res => {
+        expect(res.body.user._id).toBe(hexId)
+      })
+      .end((err, res) => {
+        if (err) return done(err);
+
+        User.find()
+          .then(users => {
+            expect(users.length).toBe(1);
+            done();
+          })
+          .catch(err => done(err));
+      });
+  });
+
+  it('should return 404 if user not found', (done) => {
+    request(app)
+      .delete('/users/5b98e13b430d2d30bc496fe2')
+      .expect(404)
+      .end((err, res) => {
+        if (err) return done(err);
+        User.find()
+          .then(users => {
+            expect(users.length).toBe(2);
+            done();
+          })
+          .catch(err => done(err));
+      })
+  });
+
+  it('should return 404 if object ID is invalid', (done) => {
+    request(app)
+      .delete('/users/123123')
+      .expect(404)
+      .end((err, res) => {
+        if (err) return done(err);
+
+        User.find()
+          .then(users => {
+            expect(users.length).toBe(2);
+            done();
+          })
+          .catch(err => done(err));
+      })
+  });
+});
+
+describe('PATCH /users/:id', () => {
+  it('should update a user', (done) => {
+
+    const hexId = users[0]._id.toHexString();
+    const firstName = 'Carl';
+
+    request(app)
+      .patch(`/users/${hexId}`)
+      .send({firstName})
+      .expect(200)
+      .expect(res => {
+        expect(res.body.user.firstName).toBe(firstName)
+      })
+      .end(done);
+  });
 });

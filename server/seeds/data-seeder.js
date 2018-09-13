@@ -94,7 +94,7 @@ const emojis = [
   }
 ];
 
-const division = [
+const divisions = [
   'Front End Team 1',
   'Front End Team 2',
   'Front End Team 3',
@@ -117,7 +117,7 @@ for (let i=1; i<=20; i++) {
     avatar: faker.image.avatar(),
     address: faker.address.streetAddress("###") + ' ' + faker.address.city() + ' ' + faker.address.county(),
     phone: faker.phone.phoneNumberFormat(),
-    division: faker.random.arrayElement(division),
+    division: faker.random.arrayElement(divisions),
     password: bcrypt.hashSync("123456", 10),
     role: "member"
   });
